@@ -36,9 +36,11 @@ class CartService {
   String? restaurantName;
   static String? userToken;
   static String? userRole;
+  static String? userId;
 
   static const String _userTokenKey = 'user_token';
   static const String _userRoleKey = 'user_role';
+  static const String _userIdKey = 'user_id';
   static const String _restaurantIdKey = 'restaurant_id';
   static const String _restaurantNameKey = 'restaurant_name';
 
@@ -179,6 +181,27 @@ class CartService {
     }
   }
 
+  static Future<void> setUserId(String id) async {
+    userId = id;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_userIdKey, id);
+    } catch (_) {
+      // ignore storage errors
+    }
+  }
+
+  static Future<String?> loadUserId() async {
+    if (userId != null && userId!.isNotEmpty) return userId;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      userId = prefs.getString(_userIdKey);
+      return userId;
+    } catch (_) {
+      return null;
+    }
+  }
+
   static Future<String?> loadRole() async {
     if (userRole != null && userRole!.isNotEmpty) return userRole;
     try {
@@ -212,6 +235,7 @@ class CartService {
       // ignore storage errors
     }
     await clearRestaurant();
+    await clearUserId();
   }
 
   static Future<void> clearRole() async {
@@ -219,6 +243,16 @@ class CartService {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_userRoleKey);
+    } catch (_) {
+      // ignore storage errors
+    }
+  }
+
+  static Future<void> clearUserId() async {
+    userId = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_userIdKey);
     } catch (_) {
       // ignore storage errors
     }

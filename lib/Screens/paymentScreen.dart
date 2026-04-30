@@ -60,9 +60,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
               child: Row(
                 textDirection: TextDirection.rtl,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
-                  //SizedBox(width: 8),
-                  Text(
+                children: [
+                  const Text(
                     'المبلغ المستحق للدفع',
                     style: TextStyle(
                       fontSize: 16,
@@ -70,10 +69,9 @@ class _PaymentScreenState extends State<PaymentScreen> {
                       color: Color(0xFF0F4D38),
                     ),
                   ),
-
                   Text(
-                    '145 ج.م',
-                    style: TextStyle(
+                    '${widget.total.toStringAsFixed(2)} ج.م',
+                    style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Color(0xFF0F4D38),
@@ -253,9 +251,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
         return;
       }
 
+      // Load user ID to ensure data isolation
+      await CartService.loadUserId();
+      final userId = CartService.userId;
+
+      if (userId == null || userId.isEmpty) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('يجب تسجيل الدخول أولاً')));
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
       final orderItems = cartItems.map((item) => item.toJson()).toList();
 
       final orderData = {
+        'user': userId,
         'restaurant': cartService.restaurantId,
         'orderItems': orderItems,
         'paymentMethod': selectedPayment,

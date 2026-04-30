@@ -30,7 +30,9 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
   Future<void> fetchOrders() async {
     try {
       await CartService.loadRestaurant();
+      await CartService.loadUserId();
       final token = CartService.userToken;
+      final userId = CartService.userId;
       final restaurantId = CartService().restaurantId;
 
       if (token == null || token.isEmpty) {
@@ -41,18 +43,35 @@ class _MyOrdersScreenState extends State<MyOrdersScreen> {
         return;
       }
 
-      if (restaurantId == null || restaurantId.isEmpty) {
+      if (userId == null || userId.isEmpty) {
         setState(() {
-          errorMessage = 'لا يمكن تحديد المطعم الخاص بالأدمن';
+          errorMessage = 'لا يمكن تحديد المستخدم الحالي';
           isLoading = false;
         });
         return;
       }
 
+      // Determine endpoint based on role
+      final role = CartService.userRole?.toLowerCase() ?? 'student';
+      String ordersUrl;
+      
+      if (role == 'admin') {
+        // Admin sees all orders for their assigned restaurant
+        if (restaurantId == null || restaurantId.isEmpty) {
+          setState(() {
+            errorMessage = 'لا يمكن تحديد المطعم الخاص بالأدمن';
+            isLoading = false;
+          });
+          return;
+        }
+        ordersUrl = 'https://mustafahassanapi.ahmedbadawi.com/api/orders/restaurant/$restaurantId';
+      } else {
+        // Student sees only their own orders
+        ordersUrl = 'https://mustafahassanapi.ahmedbadawi.com/api/orders/user/$userId';
+      }
+
       final response = await http.get(
-        Uri.parse(
-          'https://mustafahassanapi.ahmedbadawi.com/api/orders/restaurant/$restaurantId',
-        ),
+        Uri.parse(ordersUrl),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
