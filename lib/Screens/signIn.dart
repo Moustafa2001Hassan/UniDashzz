@@ -42,12 +42,16 @@ class _SignInScreenState extends State<SignInScreen> {
         final data = jsonDecode(response.body);
         final token = data['token'];
         final userRole = data['role'] ?? 'student';
+        final userId = data['_id'] ?? data['id'] ?? data['userId'] as String?;
         final restaurantId = data['restaurant'] as String?;
         final restaurantName = data['name'] as String? ?? '';
 
-        // حفظ التوكن والدور وبيانات المطعم في CartService و SharedPreferences
+        // حفظ التوكن والدور وبيانات المطعم والمستخدم في CartService و SharedPreferences
         await CartService.setToken(token);
         await CartService.setRole(userRole);
+        if (userId != null && userId.isNotEmpty) {
+          await CartService.setUserId(userId);
+        }
         if (restaurantId != null && restaurantId.isNotEmpty) {
           await CartService.saveRestaurant(restaurantId, restaurantName);
         } else {
